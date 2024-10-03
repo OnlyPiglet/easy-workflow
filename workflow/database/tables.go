@@ -14,7 +14,7 @@ type ProcDef struct {
 	UserID    string    `gorm:"column:user_id;type:VARCHAR(250) NOT NULL;comment:创建者ID"`
 	Source    string    `gorm:"column:source;type:VARCHAR(250) NOT NULL;uniqueIndex:uix_name_source;comment:来源(引擎可能被多个系统、组件等使用，这里记下从哪个来源创建的流程);"`
 	CreatTime LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`
-	Process   Process   `gorm:"-"`
+	Process   Process   `gorm:"-" json:"process"`
 }
 
 func (pd *ProcDef) TableName() string {
@@ -46,12 +46,12 @@ func (hd *HistProcDef) TableName() string {
 type ProcInst struct {
 	gorm.Model
 	//ID            int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程实例ID"`     //流程实例ID
-	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                               //流程ID
-	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`                              //流程版本号
-	BusinessID    string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID"`                  //业务ID
-	Starter       string    `gorm:"index:ix_starter;column:starter;type:VARCHAR(250) NOT NULL;comment:流程发起人用户ID"`            //流程发起人用户ID
-	CurrentNodeID string    `gorm:"column:current_node_id;type:VARCHAR(250) NOT NULL;comment:当前进行节点ID"`                       //当前进行节点ID
-	CreateTime    LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`                  //创建时间
+	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                    //流程ID
+	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`                      //流程版本号
+	BusinessID    string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID"`       //业务ID
+	Starter       string    `gorm:"index:ix_starter;column:starter;type:VARCHAR(250) NOT NULL;comment:流程发起人用户ID"`      //流程发起人用户ID
+	CurrentNodeID string    `gorm:"column:current_node_id;type:VARCHAR(250) NOT NULL;comment:当前进行节点ID"`                //当前进行节点ID
+	CreateTime    LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`         //创建时间
 	Status        int       `gorm:"column:status;type:TINYINT DEFAULT 0 ;default 0;comment:0:未完成(审批中) 1:已完成(通过) 2:撤销"` //0:未完成(审批中) 1:已完成(通过) 2:撤销
 }
 
