@@ -1,7 +1,7 @@
 package service
 
 import (
-	. "github.com/Bunny3th/easy-workflow/workflow/engine"
+	. "github.com/OnlyPiglet/easy-workflow/workflow/engine"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -381,7 +381,7 @@ func Task_FinishedList(c *gin.Context) {
 		c.JSON(400, err.Error())
 		return
 	}
-	if tasks, err := GetTaskFinishedList(UserID, ProcessName, IgnoreStartByMe,SortByAsc, StartIndex, MaxRow); err == nil {
+	if tasks, err := GetTaskFinishedList(UserID, ProcessName, IgnoreStartByMe, SortByAsc, StartIndex, MaxRow); err == nil {
 		c.JSON(200, tasks)
 	} else {
 		c.JSON(400, err.Error())

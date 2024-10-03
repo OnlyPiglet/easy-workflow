@@ -1,11 +1,11 @@
 package main
 
 import (
-	. "github.com/Bunny3th/easy-workflow/example/event"
-	. "github.com/Bunny3th/easy-workflow/example/process"
-	"github.com/Bunny3th/easy-workflow/example/schedule"
-	. "github.com/Bunny3th/easy-workflow/workflow/engine"
-	. "github.com/Bunny3th/easy-workflow/workflow/web_api"
+	. "github.com/OnlyPiglet/easy-workflow/example/event"
+	. "github.com/OnlyPiglet/easy-workflow/example/process"
+	"github.com/OnlyPiglet/easy-workflow/example/schedule"
+	. "github.com/OnlyPiglet/easy-workflow/workflow/engine"
+	. "github.com/OnlyPiglet/easy-workflow/workflow/web_api"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -17,7 +17,7 @@ func DBConnConfig() {
 
 func main() {
 	//----------------------------开启流程引擎----------------------------
-	StartWorkFlow(DBConnConfig,false,&MyEvent{})
+	StartWorkFlow(DBConnConfig, false, &MyEvent{})
 
 	//----------------------------生成一个示例流程----------------------------
 	CreateExampleProcess()
@@ -26,7 +26,6 @@ func main() {
 	start, _ := time.ParseInLocation("2006-01-02 15:04:05", "2023-10-27 00:00:00", time.Local)
 	end, _ := time.ParseInLocation("2006-01-02 15:04:05", "2199-10-27 00:00:00", time.Local)
 	go ScheduleTask("自动完成任务", start, end, 10, schedule.AutoFinishTask)
-
 
 	//----------------------------开启web api----------------------------
 	//这里需要注意：如果你的业务系统也同时使用了swagger
