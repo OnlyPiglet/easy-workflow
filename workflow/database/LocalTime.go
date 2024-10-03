@@ -2,17 +2,35 @@ package database
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 )
 
-//gorm中，定义数据表datetime字段类型为time.time时,查询返回格式类似2023-09-19T14:41:28+08:00
-//这种格式对人不友好，亦对前端处理不友好(js时间处理函数较弱)
-//故使用自定义类型，对时间格式做格式化处理
+// gorm中，定义数据表datetime字段类型为time.time时,查询返回格式类似2023-09-19T14:41:28+08:00
+// 这种格式对人不友好，亦对前端处理不友好(js时间处理函数较弱)
+// 故使用自定义类型，对时间格式做格式化处理
 type LocalTime time.Time
 
 var LTime *LocalTime
 
+func (t *LocalTime) UnmarshalJSON(data []byte) error {
+	// 去掉字符串两边的引号
+	var timeString string
+	if err := json.Unmarshal(data, &timeString); err != nil {
+		return err
+	}
+
+	// 解析时间字符串为 time.Time
+	parsedTime, err := time.Parse("2006-01-02 15:04:05", timeString)
+	if err != nil {
+		return err
+	}
+
+	// 将解析后的 time.Time 转换为 LocalTime
+	*t = LocalTime(parsedTime)
+	return nil
+}
 func (t *LocalTime) MarshalJSON() ([]byte, error) {
 	tTime := time.Time(*t)
 	return []byte(fmt.Sprintf("\"%v\"", tTime.Format("2006-01-02 15:04:05"))), nil
