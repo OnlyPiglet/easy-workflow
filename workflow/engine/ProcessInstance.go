@@ -81,14 +81,14 @@ func instanceInit(ProcessID int, BusinessID string, VariableJson string) (int, N
 	}
 
 	//保存流程变量
-	err = InstanceVariablesSave(procInst.ID, VariableJson)
+	err = InstanceVariablesSave(int(procInst.ID), VariableJson)
 	if err != nil {
 		tx.Rollback()
 		return 0, StartNode, err
 	}
 
 	//获取流程起始人
-	users, err := resolveNodeUser(procInst.ID, StartNode)
+	users, err := resolveNodeUser(int(procInst.ID), StartNode)
 	if err != nil {
 		tx.Rollback()
 		return 0, StartNode, err
@@ -109,7 +109,7 @@ func instanceInit(ProcessID int, BusinessID string, VariableJson string) (int, N
 	//关闭事务
 	tx.Commit()
 
-	return procInst.ID, StartNode, nil
+	return int(procInst.ID), StartNode, nil
 }
 
 // 开始流程实例 返回流程实例ID
