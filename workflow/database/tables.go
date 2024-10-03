@@ -1,8 +1,11 @@
 package database
 
+import "gorm.io/gorm"
+
 // 流程定义表
 type ProcDef struct {
-	ID        int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程ID"`
+	gorm.Model
+	//ID        int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程ID"`
 	Name      string    `gorm:"column:name;type:VARCHAR(250) NOT NULL;comment:流程名字;uniqueIndex:uix_name_source"`
 	Version   int       `gorm:"column:version;type:INT UNSIGNED NOT NULL DEFAULT 1;default:1;comment:版本号"`
 	Resource  string    `gorm:"column:resource;type:TEXT NOT NULL;comment:流程定义模板"`
@@ -21,6 +24,7 @@ type CommonID struct {
 
 // 流程定义历史表
 type HistProcDef struct {
+	gorm.Model
 	CommonID
 	ProcID    int       `gorm:"column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
 	Name      string    `gorm:"column:name;type:VARCHAR(250) NOT NULL;comment:流程名字;"`
@@ -37,7 +41,8 @@ func (hd *HistProcDef) TableName() string {
 
 // 流程实例表
 type ProcInst struct {
-	ID            int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程实例ID"`     //流程实例ID
+	gorm.Model
+	//ID            int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程实例ID"`     //流程实例ID
 	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                    //流程ID
 	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`                      //流程版本号
 	BusinessID    string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID"`       //业务ID
@@ -53,7 +58,8 @@ func (pi *ProcInst) TableName() string {
 
 // 流程实例历史表
 type HistProcInst struct {
-	CommonID
+	//CommonID
+	gorm.Model
 	ProcInstID    int       `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
 	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`
 	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`
@@ -70,7 +76,9 @@ func (h *HistProcInst) TableName() string {
 
 // 任务表
 type ProcTask struct {
-	ID                 int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:任务ID"`
+	gorm.Model
+
+	//ID                 int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:任务ID"`
 	ProcID             int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID,冗余字段，偷懒用"`
 	ProcInstID         int       `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
 	BusinessID         string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID,冗余字段,偷懒用"`
@@ -95,7 +103,9 @@ func (pt *ProcTask) TableName() string {
 
 // 任务历史表
 type HistProcTask struct {
-	CommonID
+	gorm.Model
+
+	//	CommonID
 	TaskID             int       `gorm:"index:ix_task_id;column:task_id;type:INT UNSIGNED NOT NULL;comment:任务ID"`
 	ProcID             int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID,冗余字段，偷懒用"`
 	ProcInstID         int       `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
@@ -121,7 +131,9 @@ func (hpt *HistProcTask) TableName() string {
 
 // 流程节点执行关系定义表
 type ProcExecution struct {
-	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
+	gorm.Model
+
+	//	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcID      int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
 	ProcVersion int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`
 	NodeID      string    `gorm:"column:node_id;type:VARCHAR(250) NOT NULL;comment:节点ID"`
@@ -138,7 +150,9 @@ func (pe *ProcExecution) TableName() string {
 
 // 流程节点执行关系定义历史表
 type HistProcExecution struct {
-	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
+	gorm.Model
+
+	//	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcID      int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
 	ProcVersion int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`
 	NodeID      string    `gorm:"column:node_id;type:VARCHAR(250) NOT NULL;comment:节点ID"`
@@ -155,7 +169,9 @@ func (he *HistProcExecution) TableName() string {
 
 // 流程实例变量表
 type ProcInstVariable struct {
-	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
+	gorm.Model
+
+	//	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcInstID int    `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
 	Key        string `gorm:"column:key;type:VARCHAR(250) NOT NULL;comment:变量key"`
 	Value      string `gorm:"column:value;type:VARCHAR(250) NOT NULL;comment:变量value"`
@@ -167,7 +183,9 @@ func (piv *ProcInstVariable) TableName() string {
 
 // 流程实例变量历史表
 type HistProcInstVariable struct {
-	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
+	gorm.Model
+
+	//	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcInstID int    `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
 	Key        string `gorm:"column:key;type:VARCHAR(250) NOT NULL;comment:变量key"`
 	Value      string `gorm:"column:value;type:VARCHAR(250) NOT NULL;comment:变量value"`
