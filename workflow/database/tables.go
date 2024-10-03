@@ -1,6 +1,6 @@
 package database
 
-//流程定义表
+// 流程定义表
 type ProcDef struct {
 	ID        int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程ID"`
 	Name      string    `gorm:"column:name;type:VARCHAR(250) NOT NULL;comment:流程名字;uniqueIndex:uix_name_source"`
@@ -11,11 +11,15 @@ type ProcDef struct {
 	CreatTime LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`
 }
 
+func (pd *ProcDef) TableName() string {
+	return "proc_def"
+}
+
 type CommonID struct {
 	ID int `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 }
 
-//流程定义历史表
+// 流程定义历史表
 type HistProcDef struct {
 	CommonID
 	ProcID    int       `gorm:"column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
@@ -27,7 +31,11 @@ type HistProcDef struct {
 	CreatTime LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`
 }
 
-//流程实例表
+func (hd *HistProcDef) TableName() string {
+	return "hist_proc_def"
+}
+
+// 流程实例表
 type ProcInst struct {
 	ID            int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程实例ID"`     //流程实例ID
 	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                    //流程ID
@@ -39,7 +47,11 @@ type ProcInst struct {
 	Status        int       `gorm:"column:status;type:TINYINT DEFAULT 0 ;default 0;comment:0:未完成(审批中) 1:已完成(通过) 2:撤销"` //0:未完成(审批中) 1:已完成(通过) 2:撤销
 }
 
-//流程实例历史表
+func (pi *ProcInst) TableName() string {
+	return "proc_inst"
+}
+
+// 流程实例历史表
 type HistProcInst struct {
 	CommonID
 	ProcInstID    int       `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
@@ -52,7 +64,11 @@ type HistProcInst struct {
 	Status        int       `gorm:"column:status;type:TINYINT DEFAULT 0 ;default 0;comment:0:未完成(审批中) 1:已完成(通过) 2:撤销"`
 }
 
-//任务表
+func (h *HistProcInst) TableName() string {
+	return "hist_proc_inst"
+}
+
+// 任务表
 type ProcTask struct {
 	ID                 int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:任务ID"`
 	ProcID             int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID,冗余字段，偷懒用"`
@@ -73,7 +89,11 @@ type ProcTask struct {
 	FinishedTime       LocalTime `gorm:"index:ix_finished_time;column:finished_time;type:DATETIME DEFAULT NULL;default:NULL;comment:处理任务时间"`
 }
 
-//任务历史表
+func (pt *ProcTask) TableName() string {
+	return "proc_task"
+}
+
+// 任务历史表
 type HistProcTask struct {
 	CommonID
 	TaskID             int       `gorm:"index:ix_task_id;column:task_id;type:INT UNSIGNED NOT NULL;comment:任务ID"`
@@ -95,33 +115,45 @@ type HistProcTask struct {
 	FinishedTime       LocalTime `gorm:"index:ix_finished_time;column:finished_time;type:DATETIME DEFAULT NULL;default:NULL;comment:处理任务时间"`
 }
 
-//流程节点执行关系定义表
+func (hpt *HistProcTask) TableName() string {
+	return "hist_proc_task"
+}
+
+// 流程节点执行关系定义表
 type ProcExecution struct {
 	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcID      int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
 	ProcVersion int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`
 	NodeID      string    `gorm:"column:node_id;type:VARCHAR(250) NOT NULL;comment:节点ID"`
 	NodeName    string    `gorm:"column:node_name;type:VARCHAR(250) NOT NULL;comment:节点名称"`
-	PrevNodeID  string   `gorm:"column:prev_node_id;type:VARCHAR(250) DEFAULT NULL;default NULL;comment:上级节点ID"`
+	PrevNodeID  string    `gorm:"column:prev_node_id;type:VARCHAR(250) DEFAULT NULL;default NULL;comment:上级节点ID"`
 	NodeType    int       `gorm:"column:node_type;type:TINYINT NOT NULL;comment:流程类型 0:开始节点 1:任务节点 2:网关节点 3:结束节点"`
 	IsCosigned  int       `gorm:"column:is_cosigned;type:TINYINT NOT NULL;comment:是否会签"`
 	CreateTime  LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default NOW();comment:创建时间"`
 }
 
-//流程节点执行关系定义历史表
+func (pe *ProcExecution) TableName() string {
+	return "proc_execution"
+}
+
+// 流程节点执行关系定义历史表
 type HistProcExecution struct {
 	ID          int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcID      int       `gorm:"index:ix_proc_id;column:proc_id;type:INT UNSIGNED NOT NULL;comment:流程ID"`
 	ProcVersion int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`
 	NodeID      string    `gorm:"column:node_id;type:VARCHAR(250) NOT NULL;comment:节点ID"`
 	NodeName    string    `gorm:"column:node_name;type:VARCHAR(250) NOT NULL;comment:节点名称"`
-	PrevNodeID  string   `gorm:"column:prev_node_id;type:VARCHAR(250) DEFAULT NULL;default NULL;comment:上级节点ID"`
+	PrevNodeID  string    `gorm:"column:prev_node_id;type:VARCHAR(250) DEFAULT NULL;default NULL;comment:上级节点ID"`
 	NodeType    int       `gorm:"column:node_type;type:TINYINT NOT NULL;comment:流程类型 0:开始节点 1:任务节点 2:网关节点 3:结束节点"`
 	IsCosigned  int       `gorm:"column:is_cosigned;type:TINYINT NOT NULL;comment:是否会签"`
 	CreateTime  LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default NOW();comment:创建时间"`
 }
 
-//流程实例变量表
+func (he *HistProcExecution) TableName() string {
+	return "hist_proc_execution"
+}
+
+// 流程实例变量表
 type ProcInstVariable struct {
 	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcInstID int    `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
@@ -129,10 +161,18 @@ type ProcInstVariable struct {
 	Value      string `gorm:"column:value;type:VARCHAR(250) NOT NULL;comment:变量value"`
 }
 
-//流程实例变量历史表
+func (piv *ProcInstVariable) TableName() string {
+	return "proc_inst_variable"
+}
+
+// 流程实例变量历史表
 type HistProcInstVariable struct {
 	ID         int    `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 	ProcInstID int    `gorm:"index:ix_proc_inst_id;column:proc_inst_id;type:INT UNSIGNED NOT NULL;comment:流程实例ID"`
 	Key        string `gorm:"column:key;type:VARCHAR(250) NOT NULL;comment:变量key"`
 	Value      string `gorm:"column:value;type:VARCHAR(250) NOT NULL;comment:变量value"`
+}
+
+func (hivv *HistProcInstVariable) TableName() string {
+	return "hist_proc_inst_variable"
 }
