@@ -101,7 +101,7 @@ func CreateTask(ProcessInstanceID int, NodeID string, PrevNodeID string, UserIDs
 	//获取存入数据库后生成的TaskID
 	var TaskIDs []int
 	for _, t := range tasks {
-		TaskIDs = append(TaskIDs, t.ID)
+		TaskIDs = append(TaskIDs, int(t.ID))
 	}
 
 	return TaskIDs, nil
