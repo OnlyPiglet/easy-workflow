@@ -1,4 +1,4 @@
-package model
+package database
 
 type TaskAction struct {
 	CanPass                     bool //任务可以执行“通过”

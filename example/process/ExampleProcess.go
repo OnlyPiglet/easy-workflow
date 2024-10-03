@@ -1,8 +1,8 @@
 package process
 
 import (
+	. "github.com/OnlyPiglet/easy-workflow/workflow/database"
 	. "github.com/OnlyPiglet/easy-workflow/workflow/engine"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
 	"log"
 )
 

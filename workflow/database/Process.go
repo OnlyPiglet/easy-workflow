@@ -1,4 +1,4 @@
-package model
+package database
 
 type Process struct {
 	ProcessName  string   //流程名

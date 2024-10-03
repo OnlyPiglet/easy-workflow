@@ -1,6 +1,4 @@
-package model
-
-import . "github.com/OnlyPiglet/easy-workflow/workflow/database"
+package database
 
 type Instance struct {
 	ProcInstID    int       `gorm:"column:id;"`             //流程实例ID

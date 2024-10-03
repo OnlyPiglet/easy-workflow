@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/OnlyPiglet/easy-workflow/workflow/database"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
 )
 
 // 生成任务 返回生成的任务ID数组
@@ -177,7 +176,7 @@ func processTask(TaskID int, Comment string, VariableJson string, option taskOpt
 	}
 
 	//如果是驳回，则验证是否起始节点(起始节点不能做驳回)
-	if option.Status == 2 && CurrentNode.NodeType == RootNode {
+	if option.Status == 2 && CurrentNode.NodeType == database.RootNode {
 		return errors.New("起始节点无法驳回!")
 	}
 
@@ -187,9 +186,9 @@ func processTask(TaskID int, Comment string, VariableJson string, option taskOpt
 	}
 
 	//当前task上一个节点.这里要注意，如果当前节点的PrevNodeID=""，则需要制造一个空节点
-	var PrevNode Node
+	var PrevNode database.Node
 	if taskInfo.PrevNodeID == "" {
-		PrevNode = Node{}
+		PrevNode = database.Node{}
 	} else {
 		PrevNode, err = GetInstanceNode(taskInfo.ProcInstID, taskInfo.PrevNodeID)
 		if err != nil {
@@ -206,7 +205,7 @@ func processTask(TaskID int, Comment string, VariableJson string, option taskOpt
 	}
 
 	//获取任务执行完毕后下一个节点
-	var NextNode Node
+	var NextNode database.Node
 	//如果任务动作是“pass” and 开启 DirectlyToWhoRejectedMe,直接使用任务的PrevNodeID
 	if option.Status == 1 && option.DirectlyToWhoRejectedMe {
 		NextNode, err = GetInstanceNode(taskInfo.ProcInstID, taskInfo.PrevNodeID)
@@ -303,8 +302,8 @@ func TaskTransfer(TaskID int, Users []string) error {
 }
 
 // 获取任务信息
-func GetTaskInfo(TaskID int) (Task, error) {
-	var task Task
+func GetTaskInfo(TaskID int) (database.Task, error) {
+	var task database.Task
 	sql := "WITH tmp_task AS\n" +
 		"(SELECT id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
 		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
@@ -324,10 +323,10 @@ func GetTaskInfo(TaskID int) (Task, error) {
 
 	_, err := ExecSQL(sql, &task, TaskID, TaskID)
 	if err != nil {
-		return Task{}, err
+		return database.Task{}, err
 	}
 	if task.TaskID == 0 {
-		return Task{}, fmt.Errorf("ID为%d的任务不存在!", TaskID)
+		return database.Task{}, fmt.Errorf("ID为%d的任务不存在!", TaskID)
 	}
 
 	return task, nil
@@ -339,8 +338,8 @@ func GetTaskInfo(TaskID int) (Task, error) {
 // SortByASC 返回数据是否按照任务生成时间升序排列(实际是按照TaskID排序。TaskID是int型自增字段，用其排序与用createtime效果一致)。若传入false，则会按照降序排列
 // StartIndex:分页用,开始index
 // MaxRows:分页用,最大返回行数
-func GetTaskToDoList(UserID string, ProcessName string, SortByASC bool, StartIndex int, MaxRows int) ([]Task, error) {
-	var tasks []Task
+func GetTaskToDoList(UserID string, ProcessName string, SortByASC bool, StartIndex int, MaxRows int) ([]database.Task, error) {
+	var tasks []database.Task
 
 	//根据传入参数判断排序规则
 	var sortBy string
@@ -383,8 +382,8 @@ func GetTaskToDoList(UserID string, ProcessName string, SortByASC bool, StartInd
 // SortByASC 返回数据是否按照任务完成时间升序排列。若传入false，则会按照降序排列
 // StartIndex:分页用,开始index
 // MaxRows:分页用,最大返回行数
-func GetTaskFinishedList(UserID string, ProcessName string, IgnoreStartByMe bool, SortByASC bool, StartIndex int, MaxRows int) ([]Task, error) {
-	var tasks []Task
+func GetTaskFinishedList(UserID string, ProcessName string, IgnoreStartByMe bool, SortByASC bool, StartIndex int, MaxRows int) ([]database.Task, error) {
+	var tasks []database.Task
 
 	//根据传入参数判断排序规则
 	var sortBy string
@@ -440,7 +439,7 @@ func GetTaskFinishedList(UserID string, ProcessName string, IgnoreStartByMe bool
 }
 
 // 根据流程定义,列出task所在节点的所有上流节点
-func TaskUpstreamNodeList(TaskID int) ([]Node, error) {
+func TaskUpstreamNodeList(TaskID int) ([]database.Node, error) {
 	task, err := GetTaskInfo(TaskID)
 	if err != nil {
 		return nil, err
@@ -453,7 +452,7 @@ func TaskUpstreamNodeList(TaskID int) ([]Node, error) {
 		"SELECT a.`node_id`,a.node_name,a.`prev_node_id`,a.`node_type` " +
 		"FROM `proc_execution` a JOIN tmp b ON a.node_id=b.`prev_node_id`) " +
 		"SELECT DISTINCT node_id,node_name,prev_node_id,node_type FROM tmp WHERE node_type!=2 AND node_id!=?;"
-	var nodes []Node
+	var nodes []database.Node
 	if _, err := ExecSQL(sql, &nodes, task.NodeID, task.NodeID); err == nil {
 		return nodes, nil
 	} else {
@@ -481,7 +480,7 @@ func TaskFreeRejectToUpstreamNode(TaskID int, NodeID string, Comment string, Var
 		return err
 	}
 	//起始节点不能做驳回
-	if CurrentNode.NodeType == RootNode {
+	if CurrentNode.NodeType == database.RootNode {
 		return errors.New("起始节点无法驳回!")
 	}
 
@@ -507,8 +506,8 @@ func TaskFreeRejectToUpstreamNode(TaskID int, NodeID string, Comment string, Var
 }
 
 // 获取流程实例下任务历史记录
-func GetInstanceTaskHistory(ProcessInstanceID int) ([]Task, error) {
-	var tasklist []Task
+func GetInstanceTaskHistory(ProcessInstanceID int) ([]database.Task, error) {
+	var tasklist []database.Task
 	sql := "WITH tmp_task AS\n" +
 		"(SELECT id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
 		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
@@ -534,16 +533,16 @@ func GetInstanceTaskHistory(ProcessInstanceID int) ([]Task, error) {
 }
 
 // 获取任务执行完毕后下一个节点
-func TaskNextNode(TaskID int) (Node, error) {
+func TaskNextNode(TaskID int) (database.Node, error) {
 	taskInfo, err := GetTaskInfo(TaskID)
 	if err != nil {
-		return Node{}, err
+		return database.Node{}, err
 	}
 
 	//获取任务节点审批状态
 	TotalTask, TotalPassed, _, err := TaskNodeStatus(TaskID)
 	if err != nil {
-		return Node{}, err
+		return database.Node{}, err
 	}
 
 	//----------------------------------首先判断任务通过的情况----------------------------------
@@ -559,11 +558,11 @@ func TaskNextNode(TaskID int) (Node, error) {
 			var ProcExecutionNextNode database.ProcExecution
 			result := DB.Where("prev_node_id=?", taskInfo.NodeID).First(&ProcExecutionNextNode)
 			if result.Error != nil {
-				return Node{}, result.Error
+				return database.Node{}, result.Error
 			}
 			return GetInstanceNode(taskInfo.ProcInstID, ProcExecutionNextNode.NodeID)
 		} else {
-			return Node{}, nil
+			return database.Node{}, nil
 		}
 	}
 
@@ -585,7 +584,7 @@ func TaskNextNode(TaskID int) (Node, error) {
 		//上一个节点是否做了驳回
 		err, PrevNodeIsReject := taskPrevNodeIsReject(taskInfo)
 		if err != nil {
-			return Node{}, err
+			return database.Node{}, err
 		}
 
 		//上一个节点中没有做驳回
@@ -596,7 +595,7 @@ func TaskNextNode(TaskID int) (Node, error) {
 			//若上一个节点做了驳回，则用递归逆推获得流程定义中上一个节点
 			Nodes, err := TaskUpstreamNodeList(TaskID)
 			if err != nil {
-				return Node{}, err
+				return database.Node{}, err
 			}
 
 			PrevNodeID = Nodes[0].NodeID
@@ -606,7 +605,7 @@ func TaskNextNode(TaskID int) (Node, error) {
 		return GetInstanceNode(taskInfo.ProcInstID, PrevNodeID)
 	}
 
-	return Node{}, nil
+	return database.Node{}, nil
 }
 
 // 任务节点审批状态 返回节点总任务数量、通过数、驳回数、
@@ -638,7 +637,7 @@ func TaskNodeStatus(TaskID int) (int, int, int, error) {
 }
 
 // 将任务提交数据(通过、驳回、变量)保存到数据库
-func taskSubmit(TaskInfo Task, Comment string, VariableJson string, Status int) error {
+func taskSubmit(TaskInfo database.Task, Comment string, VariableJson string, Status int) error {
 	//判断节点是否已处理
 	if TaskInfo.IsFinished == 1 {
 		return fmt.Errorf("节点ID%d已处理，无需操作", TaskInfo.TaskID)
@@ -710,7 +709,7 @@ func taskRevoke(TaskID int) error {
 }
 
 // 任务的上一个节点是不是做了驳回
-func taskPrevNodeIsReject(TaskInfo Task) (error, bool) {
+func taskPrevNodeIsReject(TaskInfo database.Task) (error, bool) {
 	//获得实际执行过程中上一个节点的BatchCode
 	type BatchCode struct {
 		BatchCode string `gorm:"column:batch_code"`
@@ -748,9 +747,9 @@ func taskPrevNodeIsReject(TaskInfo Task) (error, bool) {
 // 1、在会签节点无法使用 2、在此任务的上一节点并未做驳回时也无法使用
 // 对于前端而言，实现无法提前知道这些信息。
 // 难道让用户一个一个点按钮试错？此方法目的是解决这个困扰
-func WhatCanIDo(TaskID int) (TaskAction, error) {
-	var act TaskAction
-	act = TaskAction{
+func WhatCanIDo(TaskID int) (database.TaskAction, error) {
+	var act database.TaskAction
+	act = database.TaskAction{
 		CanPass:                     true,
 		CanReject:                   true,
 		CanFreeRejectToUpstreamNode: true,
@@ -759,12 +758,12 @@ func WhatCanIDo(TaskID int) (TaskAction, error) {
 
 	taskInfo, err := GetTaskInfo(TaskID)
 	if err != nil {
-		return TaskAction{}, err
+		return database.TaskAction{}, err
 	}
 
 	//如果任务已经完成，则什么都做不了
 	if taskInfo.IsFinished == 1 {
-		return TaskAction{CanPass: false,
+		return database.TaskAction{CanPass: false,
 			CanReject:                   false,
 			CanFreeRejectToUpstreamNode: false,
 			CanDirectlyToWhoRejectedMe:  false,
@@ -773,11 +772,11 @@ func WhatCanIDo(TaskID int) (TaskAction, error) {
 
 	node, err := GetInstanceNode(taskInfo.ProcInstID, taskInfo.NodeID)
 	if err != nil {
-		return TaskAction{}, nil
+		return database.TaskAction{}, nil
 	}
 
 	//起始节点不能做驳回动作 & 可驳回
-	if node.NodeType == RootNode {
+	if node.NodeType == database.RootNode {
 		act.CanReject = false
 		act.CanFreeRejectToUpstreamNode = false
 		act.CanRevoke = true
@@ -791,7 +790,7 @@ func WhatCanIDo(TaskID int) (TaskAction, error) {
 	//此任务的上一节点并未做驳回,无法使用DirectlyToWhoRejectedMe功能
 	err, PrevNodeIsReject := taskPrevNodeIsReject(taskInfo)
 	if err != nil {
-		return TaskAction{}, err
+		return database.TaskAction{}, err
 	}
 	if PrevNodeIsReject == false {
 		act.CanDirectlyToWhoRejectedMe = false

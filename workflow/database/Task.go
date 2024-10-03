@@ -1,6 +1,4 @@
-package model
-
-import . "github.com/OnlyPiglet/easy-workflow/workflow/database"
+package database
 
 type Task struct {
 	TaskID             int        `gorm:"column:id"`                     //任务ID

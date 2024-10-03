@@ -1,4 +1,4 @@
-package model
+package database
 
 type Variable struct {
 	Key   string

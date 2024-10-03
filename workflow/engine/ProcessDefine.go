@@ -3,16 +3,15 @@ package engine
 import (
 	"errors"
 	"github.com/OnlyPiglet/easy-workflow/workflow/database"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
 	"gorm.io/gorm"
 )
 
 // 流程定义解析(json->struct)
-func ProcessParse(Resource string) (Process, error) {
-	var process Process
+func ProcessParse(Resource string) (database.Process, error) {
+	var process database.Process
 	err := Json2Struct(Resource, &process)
 	if err != nil {
-		return Process{}, err
+		return database.Process{}, err
 	}
 	return process, nil
 }
@@ -110,7 +109,7 @@ func ProcessSave(Resource string, CreateUserID string) (int, error) {
 }
 
 // 将Node转为可被数据库表记录的执行步骤。节点的PrevNodeID可能是n个，则在数据库表中需要存n行
-func nodes2Execution(ProcID int, ProcVersion int, nodes []Node) []database.ProcExecution {
+func nodes2Execution(ProcID int, ProcVersion int, nodes []database.Node) []database.ProcExecution {
 	var executions []database.ProcExecution
 	for _, n := range nodes {
 		if len(n.PrevNodeIDs) <= 1 { //上级节点数<=1的情况下
@@ -200,19 +199,19 @@ func GetProcessNameByInstanceID(ProcessInstanceID int) (string, error) {
 }
 
 // 获取流程定义 by 流程ID
-func GetProcessDefine(ProcessID int) (Process, error) {
+func GetProcessDefine(ProcessID int) (database.Process, error) {
 	type result struct {
 		Resource string
 	}
 	var r result
 	_, err := ExecSQL("SELECT resource FROM proc_def WHERE ID=?", &r, ProcessID)
 	if err != nil {
-		return Process{}, err
+		return database.Process{}, err
 	}
 
 	//如果数据库中没有找到ProcessID对应的流程,则直接报错
 	if r.Resource == "" {
-		return Process{}, errors.New("未找到对应流程定义")
+		return database.Process{}, errors.New("未找到对应流程定义")
 	}
 
 	return ProcessParse(r.Resource)

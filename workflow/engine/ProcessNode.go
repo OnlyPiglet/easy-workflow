@@ -3,7 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
+	. "github.com/OnlyPiglet/easy-workflow/workflow/database"
 	"regexp"
 	"strings"
 )

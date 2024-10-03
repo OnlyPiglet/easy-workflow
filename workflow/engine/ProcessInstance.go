@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/OnlyPiglet/easy-workflow/workflow/database"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
 )
 
 // map [NodeID]Node
-type ProcNodes map[string]Node
+type ProcNodes map[string]database.Node
 
 // 定义流程cache其结构为 map [ProcID]ProcNodes
 var ProcCache = make(map[int]ProcNodes)
@@ -32,17 +31,17 @@ func GetProcCache(ProcessID int) (ProcNodes, error) {
 }
 
 // 1、流程实例初始化 2、保存实例变量 返回:流程实例ID、开始节点
-func instanceInit(ProcessID int, BusinessID string, VariableJson string) (int, Node, error) {
+func instanceInit(ProcessID int, BusinessID string, VariableJson string) (int, database.Node, error) {
 	//获取流程定义(流程中所有node)
 	nodes, err := GetProcCache(ProcessID)
 	if err != nil {
-		return 0, Node{}, err
+		return 0, database.Node{}, err
 	}
 
 	//检查流程节点中的事件是否都已经注册
 	err = VerifyEvents(ProcessID, nodes)
 	if err != nil {
-		return 0, Node{}, err
+		return 0, database.Node{}, err
 	}
 
 	//获取流程开始节点ID
@@ -52,10 +51,10 @@ func instanceInit(ProcessID int, BusinessID string, VariableJson string) (int, N
 	var r result
 	_, err = ExecSQL("SELECT node_id FROM `proc_execution` WHERE proc_id=? AND node_type=0", &r, ProcessID)
 	if err != nil {
-		return 0, Node{}, err
+		return 0, database.Node{}, err
 	}
 	if r.Node_ID == "" {
-		return 0, Node{}, fmt.Errorf("无法获取流程ID为%d的开始节点", ProcessID)
+		return 0, database.Node{}, fmt.Errorf("无法获取流程ID为%d的开始节点", ProcessID)
 	}
 
 	//获得开始节点
@@ -181,7 +180,7 @@ func InstanceRevoke(ProcessInstanceID int, Force bool, RevokeUserID string) erro
 // 流程实例变量存入数据库
 func InstanceVariablesSave(ProcessInstanceID int, VariablesJson string) error {
 	//获取变量数组
-	var variables []Variable
+	var variables []database.Variable
 	Json2Struct(VariablesJson, &variables)
 
 	tx := DB.Begin()
@@ -217,8 +216,8 @@ func InstanceVariablesSave(ProcessInstanceID int, VariablesJson string) error {
 }
 
 // 获取流程实例信息
-func GetInstanceInfo(ProcessInstanceID int) (Instance, error) {
-	var procInst Instance
+func GetInstanceInfo(ProcessInstanceID int) (database.Instance, error) {
+	var procInst database.Instance
 	//历史信息也要兼顾
 	sql := "WITH tmp_procinst AS\n" +
 		"(SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
@@ -248,8 +247,8 @@ func GetInstanceInfo(ProcessInstanceID int) (Instance, error) {
 // ProcessName:指定流程名称,传入""则为全部
 // StartIndex:分页用,开始index
 // MaxRows:分页用,最大返回行数
-func GetInstanceStartByUser(UserID string, ProcessName string, StartIndex int, MaxRows int) ([]Instance, error) {
-	var procInsts []Instance
+func GetInstanceStartByUser(UserID string, ProcessName string, StartIndex int, MaxRows int) ([]database.Instance, error) {
+	var procInsts []database.Instance
 	//历史信息也要兼顾
 	sql := "WITH tmp_procinst AS\n " +
 		"(SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +

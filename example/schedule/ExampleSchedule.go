@@ -1,8 +1,8 @@
 package schedule
 
 import (
+	. "github.com/OnlyPiglet/easy-workflow/workflow/database"
 	. "github.com/OnlyPiglet/easy-workflow/workflow/engine"
-	. "github.com/OnlyPiglet/easy-workflow/workflow/model"
 )
 
 // 这里定义一个任务计划:对于UserID为"-1"的任务做自动通过
