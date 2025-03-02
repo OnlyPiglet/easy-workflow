@@ -113,10 +113,12 @@ func CreateExampleProcess() {
 		log.Fatal(err)
 	}
 
+	println(j)
+
 	//保存流程
-	id, err := ProcessSave(j, "system")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("流程保存成功，ID：", id)
+	//id, err := ProcessSave(j, "system")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//log.Println("流程保存成功，ID：", id)
 }

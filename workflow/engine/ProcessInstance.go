@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
+
 	"github.com/OnlyPiglet/easy-workflow/workflow/database"
 )
 
@@ -219,21 +220,20 @@ func InstanceVariablesSave(ProcessInstanceID int, VariablesJson string) error {
 func GetInstanceInfo(ProcessInstanceID int) (database.Instance, error) {
 	var procInst database.Instance
 	//历史信息也要兼顾
-	sql := "WITH tmp_procinst AS\n" +
-		"(SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
-		"create_time,`status`\n" +
-		"FROM proc_inst \n" +
-		"WHERE id=?\n" +
-		"UNION ALL\n" +
-		"SELECT proc_inst_id AS id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
-		"create_time,`status` \n" +
-		"FROM hist_proc_inst \n" +
-		"WHERE proc_inst_id=?)\n" +
-		"SELECT a.id,a.proc_id,a.proc_version,a.business_id,a.starter,\n" +
+	sql := "SELECT a.id,a.proc_id,a.proc_version,a.business_id,a.starter,\n" +
 		"a.current_node_id,a.create_time,a.`status`,b.name \n" +
-		"FROM  tmp_procinst a\n" +
+		"FROM (\n" +
+		"    SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
+		"    create_time,`status`\n" +
+		"    FROM proc_inst \n" +
+		"    WHERE id=?\n" +
+		"    UNION ALL\n" +
+		"    SELECT proc_inst_id AS id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
+		"    create_time,`status` \n" +
+		"    FROM hist_proc_inst \n" +
+		"    WHERE proc_inst_id=?\n" +
+		") a\n" +
 		"LEFT JOIN proc_def b ON a.proc_id=b.id"
-
 	_, err := ExecSQL(sql, &procInst, ProcessInstanceID, ProcessInstanceID)
 	if err != nil {
 		return procInst, err
@@ -250,23 +250,22 @@ func GetInstanceInfo(ProcessInstanceID int) (database.Instance, error) {
 func GetInstanceStartByUser(UserID string, ProcessName string, StartIndex int, MaxRows int) ([]database.Instance, error) {
 	var procInsts []database.Instance
 	//历史信息也要兼顾
-	sql := "WITH tmp_procinst AS\n " +
-		"(SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
-		"create_time,`status`\n" +
-		"FROM proc_inst \n" +
-		"WHERE CASE WHEN ''=@userid THEN TRUE ELSE starter=@userid END\n" +
-		"UNION ALL\n" +
-		"SELECT proc_inst_id AS id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
-		"create_time,`status` \n" +
-		"FROM hist_proc_inst \n" +
-		"WHERE CASE WHEN ''=@userid THEN TRUE ELSE starter=@userid END)\n" +
-		"SELECT a.id,a.proc_id,a.proc_version,a.business_id,\n" +
+	sql := "SELECT a.id,a.proc_id,a.proc_version,a.business_id,\n" +
 		"a.starter,a.current_node_id,a.create_time,a.`status`,b.name\n" +
-		"FROM tmp_procinst a\n" +
+		"FROM (\n" +
+		"    SELECT id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
+		"    create_time,`status`\n" +
+		"    FROM proc_inst \n" +
+		"    WHERE CASE WHEN ''=@userid THEN TRUE ELSE starter=@userid END\n" +
+		"    UNION ALL\n" +
+		"    SELECT proc_inst_id AS id,proc_id,proc_version,business_id,starter,current_node_id,\n" +
+		"    create_time,`status` \n" +
+		"    FROM hist_proc_inst \n" +
+		"    WHERE CASE WHEN ''=@userid THEN TRUE ELSE starter=@userid END\n" +
+		") a\n" +
 		"JOIN proc_def b ON a.proc_id=b.id\n" +
 		"WHERE CASE WHEN ''=@procname THEN TRUE ELSE b.name=@procname END\n" +
 		"ORDER BY a.id limit @index,@rows"
-
 	condition := map[string]interface{}{"userid": UserID, "procname": ProcessName, "index": StartIndex, "rows": MaxRows}
 
 	_, err := ExecSQL(sql, &procInsts, condition)

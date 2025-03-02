@@ -2,7 +2,6 @@ package main
 
 import (
 	. "github.com/OnlyPiglet/easy-workflow/example/event"
-	. "github.com/OnlyPiglet/easy-workflow/example/process"
 	"github.com/OnlyPiglet/easy-workflow/example/schedule"
 	. "github.com/OnlyPiglet/easy-workflow/workflow/engine"
 	. "github.com/OnlyPiglet/easy-workflow/workflow/web_api"
@@ -11,7 +10,7 @@ import (
 )
 
 func DBConnConfig() {
-	DBConnConfigurator.DBConnectString = "root:12345678@tcp(127.0.0.1:3306)/easy_workflow?charset=utf8mb4&parseTime=True&loc=Local"
+	DBConnConfigurator.DBConnectString = "root:123456@tcp(127.0.0.1:3306)/easy_workflow?charset=utf8mb4&parseTime=True&loc=Local"
 	DBConnConfigurator.LogLevel = 4 //日志级别(默认3) 1:Silent 2:Error 3:Warn 4:Info
 }
 
@@ -20,7 +19,7 @@ func main() {
 	StartWorkFlow(DBConnConfig, false, &MyEvent{})
 
 	//----------------------------生成一个示例流程----------------------------
-	CreateExampleProcess()
+	//process.CreateExampleProcess()
 
 	//开启工作流计划任务:每10秒钟执行一次自动完成任务(免审)
 	start, _ := time.ParseInLocation("2006-01-02 15:04:05", "2023-10-27 00:00:00", time.Local)

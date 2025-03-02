@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 流程定义表
+// ProcDef 流程定义表
 type ProcDef struct {
 	gorm.Model
 	//ID        int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程ID"`
@@ -25,7 +25,7 @@ type CommonID struct {
 	ID int `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;"`
 }
 
-// 流程定义历史表
+// HistProcDef 流程定义历史表
 type HistProcDef struct {
 	gorm.Model
 	CommonID
@@ -42,16 +42,16 @@ func (hd *HistProcDef) TableName() string {
 	return "hist_proc_def"
 }
 
-// 流程实例表
+// ProcInst 流程实例表
 type ProcInst struct {
 	gorm.Model
 	//ID            int       `gorm:"primaryKey;column:id;type:INT UNSIGNED NOT NULL AUTO_INCREMENT;comment:流程实例ID"`     //流程实例ID
-	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                    //流程ID
-	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`                      //流程版本号
-	BusinessID    string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID"`       //业务ID
-	Starter       string    `gorm:"index:ix_starter;column:starter;type:VARCHAR(250) NOT NULL;comment:流程发起人用户ID"`      //流程发起人用户ID
-	CurrentNodeID string    `gorm:"column:current_node_id;type:VARCHAR(250) NOT NULL;comment:当前进行节点ID"`                //当前进行节点ID
-	CreateTime    LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`         //创建时间
+	ProcID        int       `gorm:"column:proc_id;type:INT NOT NULL;index:ix_proc_id;comment:流程ID"`                               //流程ID
+	ProcVersion   int       `gorm:"column:proc_version;type:INT UNSIGNED NOT NULL;comment:流程版本号"`                              //流程版本号
+	BusinessID    string    `gorm:"column:business_id;type:VARCHAR(250) DEFAULT NULL;default:NULL;comment:业务ID"`                  //业务ID
+	Starter       string    `gorm:"index:ix_starter;column:starter;type:VARCHAR(250) NOT NULL;comment:流程发起人用户ID"`            //流程发起人用户ID
+	CurrentNodeID string    `gorm:"column:current_node_id;type:VARCHAR(250) NOT NULL;comment:当前进行节点ID"`                       //当前进行节点ID
+	CreateTime    LocalTime `gorm:"column:create_time;type:DATETIME DEFAULT NOW();default:NOW();comment:创建时间"`                  //创建时间
 	Status        int       `gorm:"column:status;type:TINYINT DEFAULT 0 ;default 0;comment:0:未完成(审批中) 1:已完成(通过) 2:撤销"` //0:未完成(审批中) 1:已完成(通过) 2:撤销
 }
 
@@ -59,7 +59,7 @@ func (pi *ProcInst) TableName() string {
 	return "proc_inst"
 }
 
-// 流程实例历史表
+// HistProcInst 流程实例历史表
 type HistProcInst struct {
 	//CommonID
 	gorm.Model
@@ -77,7 +77,7 @@ func (h *HistProcInst) TableName() string {
 	return "hist_proc_inst"
 }
 
-// 任务表
+// ProcTask 任务表
 type ProcTask struct {
 	gorm.Model
 
@@ -104,7 +104,7 @@ func (pt *ProcTask) TableName() string {
 	return "proc_task"
 }
 
-// 任务历史表
+// HistProcTask 任务历史表
 type HistProcTask struct {
 	gorm.Model
 
@@ -132,7 +132,7 @@ func (hpt *HistProcTask) TableName() string {
 	return "hist_proc_task"
 }
 
-// 流程节点执行关系定义表
+// ProcExecution 流程节点执行关系定义表
 type ProcExecution struct {
 	gorm.Model
 
@@ -151,7 +151,7 @@ func (pe *ProcExecution) TableName() string {
 	return "proc_execution"
 }
 
-// 流程节点执行关系定义历史表
+// HistProcExecution 流程节点执行关系定义历史表
 type HistProcExecution struct {
 	gorm.Model
 
@@ -170,7 +170,7 @@ func (he *HistProcExecution) TableName() string {
 	return "hist_proc_execution"
 }
 
-// 流程实例变量表
+// ProcInstVariable 流程实例变量表
 type ProcInstVariable struct {
 	gorm.Model
 
@@ -184,7 +184,7 @@ func (piv *ProcInstVariable) TableName() string {
 	return "proc_inst_variable"
 }
 
-// 流程实例变量历史表
+// HistProcInstVariable 流程实例变量历史表
 type HistProcInstVariable struct {
 	gorm.Model
 

@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
+
 	"github.com/OnlyPiglet/easy-workflow/workflow/database"
 )
 
@@ -38,8 +39,8 @@ func CreateTask(ProcessInstanceID int, NodeID string, PrevNodeID string, UserIDs
 	//而后去掉本节点中未结束任务的用户
 	//bug fix  2024.11.13 by yujf
 	//感谢hkb1990同学指出问题 原有RemoveFromSlice函数有问题，使用新函数RemoveAllElements代替
-	for _,nu:=range notFinishUsers{
-		userIDs=RemoveAllElements(userIDs,nu.UserID)
+	for _, nu := range notFinishUsers {
+		userIDs = RemoveAllElements(userIDs, nu.UserID)
 	}
 
 	//获取流程ID
@@ -306,23 +307,21 @@ func TaskTransfer(TaskID int, Users []string) error {
 // 获取任务信息
 func GetTaskInfo(TaskID int) (database.Task, error) {
 	var task database.Task
-	sql := "WITH tmp_task AS\n" +
-		"(SELECT id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
-		"FROM proc_task WHERE id=?\n" +
-		"UNION ALL\n" +
-		"SELECT task_id AS id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
-		"FROM hist_proc_task WHERE id=?\n" +
-		")\n\n" +
-		"SELECT a.id,a.proc_id,b.name,a.proc_inst_id,a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,a.is_cosigned,\n" +
-		"a.batch_code,a.user_id,a.`status` ,a.is_finished,a.`comment`,\n" +
+	sql := "SELECT a.id,a.proc_id,b.name,a.proc_inst_id,a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,a.is_cosigned,\n" +
+		"a.batch_code,a.user_id,a.`status`,a.is_finished,a.`comment`,\n" +
 		"a.proc_inst_create_time,\n" +
 		"a.create_time,\n" +
 		"a.finished_time\n" +
-		"FROM tmp_task a\n" +
+		"FROM (\n" +
+		"    SELECT id,proc_id,proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
+		"    batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time\n" +
+		"    FROM proc_task WHERE id=?\n" +
+		"    UNION ALL\n" +
+		"    SELECT task_id AS id,proc_id,proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
+		"    batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time\n" +
+		"    FROM hist_proc_task WHERE id=?\n" +
+		") a\n" +
 		"LEFT JOIN `proc_def` b ON a.proc_id=b.id;"
-
 	_, err := ExecSQL(sql, &task, TaskID, TaskID)
 	if err != nil {
 		return database.Task{}, err
@@ -353,7 +352,7 @@ func GetTaskToDoList(UserID string, ProcessName string, SortByASC bool, StartInd
 
 	sql := "SELECT a.id,a.proc_id,b.name,a.proc_inst_id,\n" +
 		"a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,\n" +
-		"a.is_cosigned,a.batch_code,a.user_id,a.`status` ,a.is_finished,a.`comment`,\n" +
+		"a.is_cosigned,a.batch_code,a.user_id,a.`status`,a.is_finished,a.`comment`,\n" +
 		"a.proc_inst_create_time,\n" +
 		"a.create_time,\n" +
 		"a.finished_time\n" +
@@ -402,21 +401,20 @@ func GetTaskFinishedList(UserID string, ProcessName string, IgnoreStartByMe bool
 		IgnoreStartByMe = false
 	}
 
-	sql := "WITH tmp_task AS\n" +
-		"(SELECT id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
-		"FROM proc_task WHERE CASE WHEN ''=@userid THEN TRUE ELSE user_id=@userid END\n" +
-		"UNION ALL\n" +
-		"SELECT task_id AS id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
-		"FROM hist_proc_task WHERE CASE WHEN ''=@userid THEN TRUE ELSE user_id=@userid END\n" +
-		")\n\n" +
-		"SELECT a.id,a.proc_id,b.name,a.proc_inst_id,a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,a.is_cosigned,\n" +
-		"a.batch_code,a.user_id,a.`status` ,a.is_finished,a.`comment`,\n" +
+	sql := "SELECT a.id,a.proc_id,b.name,a.proc_inst_id,a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,a.is_cosigned,\n" +
+		"a.batch_code,a.user_id,a.`status`,a.is_finished,a.`comment`,\n" +
 		"a.proc_inst_create_time,\n" +
 		"a.create_time,\n" +
-		"a.finished_time  \n" +
-		"FROM tmp_task a\n" +
+		"a.finished_time\n" +
+		"FROM (\n" +
+		"    SELECT id,proc_id,proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
+		"    batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time\n" +
+		"    FROM proc_task WHERE CASE WHEN ''=@userid THEN TRUE ELSE user_id=@userid END\n" +
+		"    UNION ALL\n" +
+		"    SELECT task_id AS id,proc_id,proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
+		"    batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time\n" +
+		"    FROM hist_proc_task WHERE CASE WHEN ''=@userid THEN TRUE ELSE user_id=@userid END\n" +
+		") a\n" +
 		"JOIN `proc_def` b ON a.proc_id=b.id\n" +
 		"WHERE  a.is_finished=1 \n" +
 		"AND a.`status`!=0 \n" + //有些任务不是用户完成，而是系统结束，这些任务的status=0,不必给用户看
@@ -447,19 +445,54 @@ func TaskUpstreamNodeList(TaskID int) ([]database.Node, error) {
 		return nil, err
 	}
 
-	sql := "WITH RECURSIVE tmp(`node_id`,node_name,`prev_node_id`,`node_type`) AS " +
-		"(SELECT `node_id`,node_name,`prev_node_id`,`node_type` " +
-		"FROM `proc_execution` WHERE node_id=? " +
-		"UNION ALL " +
-		"SELECT a.`node_id`,a.node_name,a.`prev_node_id`,a.`node_type` " +
-		"FROM `proc_execution` a JOIN tmp b ON a.node_id=b.`prev_node_id`) " +
-		"SELECT DISTINCT node_id,node_name,prev_node_id,node_type FROM tmp WHERE node_type!=2 AND node_id!=?;"
-	var nodes []database.Node
-	if _, err := ExecSQL(sql, &nodes, task.NodeID, task.NodeID); err == nil {
-		return nodes, nil
-	} else {
+	// 创建临时表
+	sql := "CREATE TEMPORARY TABLE IF NOT EXISTS tmp_upstream_nodes " +
+		"(node_id VARCHAR(250), node_name VARCHAR(250), prev_node_id VARCHAR(250), node_type INT);"
+	_, err = ExecSQL(sql, nil)
+	if err != nil {
 		return nil, err
 	}
+
+	// 清空临时表
+	sql = "TRUNCATE TABLE tmp_upstream_nodes;"
+	_, err = ExecSQL(sql, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// 插入初始节点
+	sql = "INSERT INTO tmp_upstream_nodes " +
+		"SELECT node_id, node_name, prev_node_id, node_type " +
+		"FROM proc_execution WHERE node_id = ?;"
+	_, err = ExecSQL(sql, nil, task.NodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 迭代插入上游节点
+	for i := 0; i < 100; i++ {
+		sql = "INSERT IGNORE INTO tmp_upstream_nodes " +
+			"SELECT DISTINCT a.node_id, a.node_name, a.prev_node_id, a.node_type " +
+			"FROM proc_execution a " +
+			"JOIN tmp_upstream_nodes b ON a.node_id = b.prev_node_id;"
+		result, _ := ExecSQL(sql, nil)
+		if result == "ok" {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 获取结果
+	sql = "SELECT DISTINCT node_id, node_name, prev_node_id, node_type " +
+		"FROM tmp_upstream_nodes WHERE node_type != 2 AND node_id != ?;"
+	var nodes []database.Node
+	_, err = ExecSQL(sql, &nodes, task.NodeID)
+	if err != nil {
+		return nil, err
+	}
+	return nodes, nil
 }
 
 // 自由驳回到任意一个上游节点
@@ -512,15 +545,15 @@ func GetInstanceTaskHistory(ProcessInstanceID int) ([]database.Task, error) {
 	var tasklist []database.Task
 	sql := "WITH tmp_task AS\n" +
 		"(SELECT id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
+		"batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
 		"FROM proc_task WHERE proc_inst_id=?\n" +
 		"UNION ALL\n" +
 		"SELECT task_id AS id,proc_id, proc_inst_id,business_id,starter,node_id,node_name,prev_node_id,is_cosigned,\n" +
-		"batch_code,user_id,`status` ,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
+		"batch_code,user_id,`status`,is_finished,`comment`,proc_inst_create_time,create_time,finished_time \n" +
 		"FROM hist_proc_task WHERE proc_inst_id=?\n" +
 		")\n\n" +
 		"SELECT a.id,a.proc_id,b.name,a.proc_inst_id,a.business_id,a.starter,a.node_id,a.node_name,a.prev_node_id,a.is_cosigned,\n" +
-		"a.batch_code,a.user_id,a.`status` ,a.is_finished,a.`comment`,\n" +
+		"a.batch_code,a.user_id,a.`status`,a.is_finished,a.`comment`,\n" +
 		"a.proc_inst_create_time,\n" +
 		"a.create_time,\n" +
 		"a.finished_time\n" +
